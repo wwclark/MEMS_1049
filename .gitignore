@@ -1,0 +1,24 @@
+# gitignore for Atmel Studio
+
+#Directories
+.vs/
+Debug/
+Documents_and_Code/
+
+#File types
+*.atsln
+*.atsuo
+*.cproj
+*.xml
+*.eep
+*.elf
+*.hex
+*.lss
+*.map
+*.srec
+*.d
+*.o
+*.mk
+
+#Files
+Makefile
