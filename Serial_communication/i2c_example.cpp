@@ -27,7 +27,7 @@ int main() {
 	// I2C (TWI) Setup
 	//If needed, turn on TWI power: PRR = PRR & 0b01111111; // Ensure that TWI is powered on (PRTWI = 0)
 	DDRC = 0b00000000; // Define all PORTC bits as input (specifically PC4 and PC5)
-	PORTC = PORTB | 0b00110000;  // set internal pull-up resistors on SCL and SDA lines (PC5 and PC4) ofr I2C bus
+	PORTC = PORTC | 0b00110000;  // set internal pull-up resistors on SCL and SDA lines (PC5 and PC4) ofr I2C bus
 	i2c_init();
 	
 	// I2C Write data as Main 
