@@ -33,11 +33,27 @@ int main(void)
 
    while(1)
     {
-        // The main loop -- toggle the bit, then delay to set the frequency
-        PORTC = PORTC ^ 1<<PORTC0;  // Note that this uses the Exclusive OR operator, which toggles an individual 
-			// bit without changing the other bits in PORTC
-                
-        wait(1000); // call delay function where the argument is number of msec to wait: the wait function will n times, each time creating a 1 msec delay
+         // The main loop -- toggle the bit, then delay to set the frequency
+         // Three different methods are shown for turning the LED on and off
+         
+         // Full Port Addressing
+         // This block of code does the blinking by addressing the whole port (not the single PC0 bit)
+         //PORTC = 0b00000001; // Turn off the LED -- note that this also clears all other bits on Port C
+         //wait(250);
+         //PORTC = 0b00000000; // Turn on the LED -- note that this also clears all other bits on Port C
+         
+         
+         // Single Bit Addressing
+         // This block of code does the blinking by addressing only the single PC0 bit
+         PORTC = PORTC | 0b00000001; // Turn off the LED -- note that this only sets the PC0 bit and leaves the others unchanged
+         wait(250);
+         PORTC = PORTC & 0b11111110; // Turn on the LED -- note that this only clears the PC0 bit and leaves the others unchanged
+         
+         //Toggling the Bit
+         // This block of code uses single bit addressing and additional Boolean arithmetic to toggle the LED state
+         //PORTC = PORTC ^ 1<<PORTC0;  // Note that this uses the Exclusive OR operator, which toggles an individual bit without changing the other bits in PORTC
+         
+         wait(2500); // call delay function where the argument is number of msec to wait: the wait function will n times, each time creating a 1 msec delay
          
     }
 	
