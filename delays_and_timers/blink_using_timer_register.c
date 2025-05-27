@@ -53,7 +53,7 @@ int main(void)
          // This block of code uses single bit addressing and additional Boolean arithmetic to toggle the LED state
          //PORTC = PORTC ^ 1<<PORTC0;  // Note that this uses the Exclusive OR operator, which toggles an individual bit without changing the other bits in PORTC
          
-         wait(2500); // call delay function where the argument is number of msec to wait: the wait function will n times, each time creating a 1 msec delay
+         wait(250); // call delay function where the argument is number of msec to wait: the wait function will n times, each time creating a 1 msec delay
          
     }
 	
