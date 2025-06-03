@@ -14,9 +14,10 @@ the interrupt routines do something, then the main code resumes with the pattern
 #include <avr/io.h>
 #include <avr/interrupt.h>
 
+#define FREQ_CLK 1000000 // Clock frequency (default setting for the ATmega328P -- 8 MHz internal clock with divide-by-8
+
 //** Functions **//
-void wait(int msec);
-void delayNms_timer0();
+void wait(volatile int multiple);
 
 //Interrupt Service Routine for INT0
 ISR(INT0_vect)
@@ -66,48 +67,34 @@ int main(void)
 return(0);
 }
 
-void wait(int multiple) {
-	//*** wait ***
-	/* This subroutine calls others to create a delay.
-		 Total delay = multiple*N, where N is in msec and is the delay created by the called function.
+void wait(volatile int number_of_msec) {
+	// This subroutine creates a delay equal to number_of_msec*T, where T is 1 msec
+	// It changes depending on the frequency defined by FREQ_CLK
+	char register_B_setting;
+	char count_limit;
 	
-		Inputs: multiple = number of multiples to delay, where multiple are the number of items an actual delay loop is called.
-		Outputs: None
-	*/
+	// Some typical clock frequencies:
+	switch(FREQ_CLK) {
+		case 16000000:
+		register_B_setting = 0b00000011; // this will start the timer in Normal mode with prescaler of 64 (CS02 = 0, CS01 = CS00 = 1).
+		count_limit = 250; // For prescaler of 64, a count of 250 will require 1 msec
+		break;
+		case 8000000:
+		register_B_setting =  0b00000011; // this will start the timer in Normal mode with prescaler of 64 (CS02 = 0, CS01 = CS00 = 1).
+		count_limit = 125; // for prescaler of 64, a count of 125 will require 1 msec
+		break;
+		case 1000000:
+		register_B_setting = 0b00000010; // this will start the timer in Normal mode with prescaler of 8 (CS02 = 0, CS01 = 1, CS00 = 0).
+		count_limit = 125; // for prescaler of 8, a count of 125 will require 1 msec
+		break;
+	}
 	
-	while (multiple > 0) {
-		delayNms_timer0();
-		multiple = multiple - 1;
+	while (number_of_msec > 0) {
+		TCCR0A = 0x00; // clears WGM00 and WGM01 (bits 0 and 1) to ensure Timer/Counter is in normal mode.
+		TCNT0 = 0;  // preload value for testing on count = 250
+		TCCR0B =  register_B_setting;  // Start TIMER0 with the settings defined above
+		while (TCNT0 < count_limit); // exits when count = the required limit for a 1 msec delay
+		TCCR0B = 0x00; // Stop TIMER0
+		number_of_msec--;
 	}
 } // end wait()
-
-void delayNms_timer0() {
-    //*** delay N ms **
-    /* This subroutine creates a delay of N msec using TIMER0 with prescaler on clock, where, for a 16MHz clock:
-    		N = .0156 msec for no prescaler and count of 250 (preload counter with 5)
-    		N = 0.125 msec for prescaler set to 8 and count of 250 (preload counter with 5)
-    		N = 1 msec for prescaler set to 64 and count of 250 (preload counter with 5)
-    		N = 4 msec for prescaler set to 256 and count of 250 (preload counter with 5)
-    		N = 16 msec for prescaler set to 1,024 and count of 250 (preload counter with 5)
-	
-			Inputs: None
-			Outputs: None
-	*/
-	
-	TCCR0A = 0x00; // clears WGM00 and WGM01 (bits 0 and 1) to ensure Timer/Counter is in normal mode.
-	
-	TCNT0 = 5;  // preload load TIMER0  (count must reach 255-5)
-	
-	//TCCR0B = 1<<CS00;				//TCCR0B = 0x01; Start TIMER0, Normal mode, crystal clock, no prescaler
-	// TCCR0B = 1<<CS01;			//TCCR0B = 0x02; // Start TIMER0, Normal mode, crystal clock, prescaler = 8
-	TCCR0B =  1<<CS01 | 1<<CS00;	//TCCR0B = 0x03;  // Start TIMER0, Normal mode, crystal clock, prescaler = 64
-	//TCCR0B = 1<<CS02;				//TCCR0B = 0x04; // Start TIMER0, Normal mode, crystal clock, prescaler = 256
-	//TCCR0B = 1<<CS02 | 1<<CS00;	//TCCR0B = 0x05; // Start TIMER0, Normal mode, crystal clock, prescaler = 1024
-	
-	while ((TIFR0 & (0x1<<TOV0)) == 0); // wait for TOV0 to roll over:
-	// How does this while loop work?? See notes
-	
-	TCCR0B = 0x00; // Stop TIMER0
-	TIFR0 = 0x1<<TOV0;  // Clear TOV0 (note that this is an odd bit in that it
-	//is cleared by writing a 1 to it)
-} // end delayNms_timer0()
